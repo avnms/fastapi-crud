@@ -1,8 +1,11 @@
 import json
 
+import pytest
+
 from app.api import crud
 
 
+# Test for HTTP POST
 def test_create_note(test_app, monkeypatch):
     test_request_payload = {
         "title": "something",
@@ -19,17 +22,24 @@ def test_create_note(test_app, monkeypatch):
 
     monkeypatch.setattr(crud, "post", mock_post)
 
-    response = test_app.post("/notes/", content=json.dumps(test_request_payload))
+    response = test_app.post(
+        "/notes/",
+        content=json.dumps(test_request_payload),
+    )
 
     assert response.status_code == 201
     assert response.json() == test_response_payload
 
 
 def test_create_note_invalid_json(test_app):
-    response = test_app.post("/notes/", content=json.dumps({"title": "something"}))
+    response = test_app.post(
+        "/notes/",
+        content=json.dumps({"title": "something"}),
+    )
     assert response.status_code == 422
 
 
+# Test for HTTP GET
 def test_read_note(test_app, monkeypatch):
     test_data = {
         "id": 1,
@@ -72,3 +82,50 @@ def test_read_all_notes(test_app, monkeypatch):
     response = test_app.get("/notes/")
     assert response.status_code == 200
     assert response.json() == test_data
+
+
+# Test for HTTP PUT
+def test_update_note(test_app, monkeypatch):
+    test_update_data = {
+        "id": 1,
+        "title": "someone",
+        "description": "someone else",
+    }
+
+    async def mock_get(id):
+        return True
+
+    monkeypatch.setattr(crud, "get", mock_get)
+
+    async def mock_put(id, payload):
+        return 1
+
+    monkeypatch.setattr(crud, "put", mock_put)
+
+    response = test_app.put(
+        "/notes/1/",
+        content=json.dumps(test_update_data),
+    )
+    assert response.status_code == 200
+    assert response.json == test_update_data
+
+
+@pytest.mark.parametrize(
+    "id, payload, status_code",
+    [
+        [1, {}, 422],
+        [1, {"description": "bar"}, 422],
+        [999, {"title": "foo", "description": "bar"}, 404],
+    ],
+)
+def test_update_note_invalid(test_app, monkeypatch, id, payload, status_code):
+    async def mock_get(id):
+        return None
+
+    monkeypatch.setattr(crud, "get", mock_get)
+
+    response = test_app.put(
+        f"/notes/{id}",
+        content=json.dumps(payload),
+    )
+    assert response.status_code == status_code
