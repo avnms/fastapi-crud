@@ -38,6 +38,12 @@ def test_create_note_invalid_json(test_app):
     )
     assert response.status_code == 422
 
+    response = test_app.post(
+        "/notes/",
+        content=json.dumps({"title": "1", "description": "2"}),
+    )
+    assert response.status_code == 422
+
 
 # Test for HTTP GET
 def test_read_note(test_app, monkeypatch):
