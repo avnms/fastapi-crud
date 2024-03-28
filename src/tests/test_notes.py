@@ -107,7 +107,7 @@ def test_update_note(test_app, monkeypatch):
         content=json.dumps(test_update_data),
     )
     assert response.status_code == 200
-    assert response.json == test_update_data
+    assert response.json() == test_update_data
 
 
 @pytest.mark.parametrize(
@@ -125,7 +125,7 @@ def test_update_note_invalid(test_app, monkeypatch, id, payload, status_code):
     monkeypatch.setattr(crud, "get", mock_get)
 
     response = test_app.put(
-        f"/notes/{id}",
+        f"/notes/{id}/",
         content=json.dumps(payload),
     )
     assert response.status_code == status_code
