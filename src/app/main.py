@@ -4,5 +4,7 @@ app = FastAPI()
 
 
 @app.get("/ping")
-def pong():
+async def pong():
+    # Some async operation could happen here
+    # Example: `notes = await get_all_notes()`
     return {"ping": "pong!"}
